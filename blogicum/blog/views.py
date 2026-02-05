@@ -57,7 +57,7 @@ class PostCreateView (LoginRequiredMixin, ProfileRedirectMixin, CreateView):
         return super().form_valid(form)
 
 
-class PostUpdateView(OnlyAuthorMixin, CommentRedirectMixin, UpdateView):
+class PostUpdateView(OnlyAuthorMixin, UpdateView):
 
     model = Post
     form_class = PostForm
