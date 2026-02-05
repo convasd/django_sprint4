@@ -90,7 +90,7 @@ class Post(AbstractPublishableModel):
         blank=False)
 
     class Meta:
-        verbose_name = 'публикация'
+        verbose_name = 'Публикация'
         verbose_name_plural = 'Публикации'
 
     def __str__(self):
@@ -103,9 +103,19 @@ class Comment(models.Model):
         Post,
         on_delete=models.CASCADE,
         related_name='comment',
-    )
+        verbose_name='Пост'
+        )
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор комментария'
+        )
 
     class Meta:
         ordering = ('created_at',)
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return self.text[:settings.LENGTH_256]

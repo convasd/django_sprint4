@@ -1,8 +1,10 @@
-from blog.models import Post
+"""Дополнительные функции."""
 from django.utils import timezone
 
+from .models import Post
 
 def get_published_posts(category_slug=None):
+    """Метод получения опубликованных постов."""
     posts = Post.objects.select_related('category').filter(
         pub_date__lt=timezone.now(),
         is_published=True,

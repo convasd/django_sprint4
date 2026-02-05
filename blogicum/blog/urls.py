@@ -1,3 +1,4 @@
+"""Настройка url адресов."""
 from django.urls import path
 
 from . import views
@@ -15,7 +16,7 @@ urlpatterns = [
     path('posts/create/', views.PostCreateView.as_view(), name='create_post'),
     path('profile/edit_profile/', views.ProfileUpdateView.as_view(),
          name='edit_profile'),
-    path('profile/<username>/', views.ProfileDetailView.as_view(),
+    path('profile/<slug:username>/', views.ProfileDetailView.as_view(),
          name='profile'),
     path('category/<slug:category_slug>/', views.CategoryPostsView.as_view(),
          name='category_posts'),
