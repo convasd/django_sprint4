@@ -9,30 +9,11 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 
 from .forms import CommentForm, PostForm, ProfileUpdateForm
+from .mixins import CommentRedirectMixin, OnlyAuthorMixin, ProfileRedirectMixin
 from .models import Category, Comment, Post
 from .utils import get_published_posts
 
 User = get_user_model()
-
-
-class OnlyAuthorMixin(UserPassesTestMixin):
-
-    def test_func(self):
-        object = self.get_object()
-        return object.author == self.request.user
-
-
-class CommentRedirectMixin:
-
-    def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.object.post.pk})
-
-
-class ProfileRedirectMixin:
-
-    def get_success_url(self):
-        return reverse('blog:profile',
-                       kwargs={'username': self.request.user.username})
 
 
 class PostListView(ListView):
@@ -76,20 +57,20 @@ class PostCreateView (LoginRequiredMixin, ProfileRedirectMixin, CreateView):
         return super().form_valid(form)
 
 
-class PostUpdateView(OnlyAuthorMixin, UpdateView):
+class PostUpdateView(OnlyAuthorMixin, CommentRedirectMixin, UpdateView):
 
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
 
     def handle_no_permission(self):
-        """Метод перенаправления при отказе в доступе."""
         post_id = self.kwargs.get('pk')
         return redirect(reverse_lazy('blog:post_detail',
                                      kwargs={'pk': post_id}))
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.object.pk})
+        return reverse('blog:post_detail',
+                       kwargs={'pk': self.object.pk})
 
 
 class PostDeleteView(OnlyAuthorMixin, ProfileRedirectMixin, DeleteView):
@@ -137,7 +118,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('blog:profile', args=[self.object.username])
 
 
-class CommentCreateView(LoginRequiredMixin, CreateView):
+class CommentCreateView(LoginRequiredMixin, CommentRedirectMixin, CreateView):
 
     model = Comment
     form_class = CommentForm
@@ -148,17 +129,12 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         form.instance.post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'pk': self.kwargs['post_id']})
 
-
-class CommentUpdateView(OnlyAuthorMixin, UpdateView):
+class CommentUpdateView(OnlyAuthorMixin, CommentRedirectMixin, UpdateView):
 
     model = Comment
     template_name = 'blog/comment.html'
     form_class = CommentForm
-    success_url = reverse_lazy('blog:post_detail')
 
     def get_object(self, queryset=None):
         comment_id = self.kwargs.get('comment_id')
@@ -169,20 +145,12 @@ class CommentUpdateView(OnlyAuthorMixin, UpdateView):
         context['post_id'] = self.kwargs.get('post_id')
         return context
 
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'pk': self.kwargs['post_id']})
 
-
-class CommentDeleteView(OnlyAuthorMixin, DeleteView):
+class CommentDeleteView(OnlyAuthorMixin, CommentRedirectMixin, DeleteView):
 
     model = Comment
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
-
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'pk': self.kwargs['post_id']})
 
 
 class CategoryPostsView(DetailView):

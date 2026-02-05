@@ -1,7 +1,7 @@
 """Дополнительные функции."""
-from blog.models import Post
 from django.utils import timezone
 
+from .models import Post
 
 def get_published_posts(category_slug=None):
     """Метод получения опубликованных постов."""
