@@ -22,6 +22,19 @@ class OnlyAuthorMixin(UserPassesTestMixin):
         return object.author == self.request.user
 
 
+class CommentRedirectMixin:
+
+    def get_success_url(self):
+        return reverse('blog:post_detail', kwargs={'pk': self.object.post.pk})
+
+
+class ProfileRedirectMixin:
+
+    def get_success_url(self):
+        return reverse('blog:profile',
+                       kwargs={'username': self.request.user.username})
+
+
 class PostListView(ListView):
 
     model = Post
@@ -52,15 +65,11 @@ class PostDetailView(UserPassesTestMixin, DetailView):
         return context
 
 
-class PostCreateView (LoginRequiredMixin, CreateView):
+class PostCreateView (LoginRequiredMixin, ProfileRedirectMixin, CreateView):
 
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
-
-    def get_success_url(self):
-        return reverse_lazy('blog:profile',
-                            kwargs={'username': self.request.user.username})
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -83,15 +92,15 @@ class PostUpdateView(OnlyAuthorMixin, UpdateView):
         return reverse('blog:post_detail', kwargs={'pk': self.object.pk})
 
 
-class PostDeleteView(OnlyAuthorMixin, DeleteView):
+class PostDeleteView(OnlyAuthorMixin, ProfileRedirectMixin, DeleteView):
 
     model = Post
-    success_url = reverse_lazy('blog:index')
+    template_name = 'blog/create.html'
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.delete(request, self.object)
-        return redirect(self.success_url)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = PostForm(instance=self.object)
+        return context
 
 
 class ProfileDetailView(DetailView):
